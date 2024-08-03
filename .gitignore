@@ -1,0 +1,10 @@
+#Directories
+.vs/
+bin/
+bin-int/
+x64/
+*/x64/
+*/obj/
+
+#Files
+*.user
