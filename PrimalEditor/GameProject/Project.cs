@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Windows;
+using System.Windows.Input;
 
 namespace PrimalEditor.GameProject
 {
@@ -14,11 +15,11 @@ namespace PrimalEditor.GameProject
         [DataMember]
         public string Name { get; private set; } = "New Project";
         [DataMember]
-        public string Path { get; private set;  }
+        public string Path { get; private set; }
 
         public string FullPath => $"{Path}{Name}{Extension}";
         [DataMember(Name = "Scenes")]
-        private ObservableCollection<Scene> _scene = new ObservableCollection<Scene>();
+        private ObservableCollection<Scene> _scenes = new ObservableCollection<Scene>();
         public ReadOnlyObservableCollection<Scene> Scenes
         {
             get; private set;
@@ -31,7 +32,7 @@ namespace PrimalEditor.GameProject
             get => _activeScene;
             set
             {
-                if(_activeScene != value)
+                if (_activeScene != value)
                 {
                     _activeScene = value;
                     OnPropertyChanged(nameof(ActiveScene));
@@ -41,6 +42,27 @@ namespace PrimalEditor.GameProject
 
 
         public static Project Current => Application.Current.MainWindow.DataContext as Project;
+
+        public static UndoRedo UndoRedo { get; } = new UndoRedo();
+
+        public ICommand Undo { private set; get; }
+        public ICommand Redo { private set; get; }
+
+        public ICommand AddScene { private set; get; }
+        public ICommand RemoveScene { private set; get; }
+
+
+        private void AddSceneInternal(string sceneName)
+        {
+            Debug.Assert(!string.IsNullOrEmpty(sceneName.Trim()));
+            _scenes.Add(new Scene(this, sceneName));
+        }
+
+        private void RemoveSceneInternal(Scene scene)
+        {
+            Debug.Assert(_scenes.Contains(scene));
+            _scenes.Remove(scene);
+        }
 
         public static Project Load(string file)
         {
@@ -59,14 +81,40 @@ namespace PrimalEditor.GameProject
         }
 
         [OnDeserialized]
-        private void OnDeserialized(StreamingContext context) 
+        private void OnDeserialized(StreamingContext context)
         {
-            if(_scene != null)
+            if (_scenes != null)
             {
-                Scenes = new ReadOnlyObservableCollection<Scene>(_scene);
+                Scenes = new ReadOnlyObservableCollection<Scene>(_scenes);
                 OnPropertyChanged(nameof(Scenes));
             }
-            ActiveScene = Scenes.FirstOrDefault(x => x.IsActive); 
+            ActiveScene = Scenes.FirstOrDefault(x => x.IsActive);
+
+            AddScene = new RelayComand<object>(x =>
+            {
+                AddSceneInternal($"New Scenes {_scenes.Count}");
+                var newScene = _scenes.Last();
+                var sceneIndex = _scenes.Count - 1;
+                UndoRedo.Add(new UndoRedoAction(
+                    () => RemoveSceneInternal(newScene),
+                    () => _scenes.Insert(sceneIndex, newScene),
+                    $"Add {newScene.Name}"
+                ));
+            });
+
+            RemoveScene = new RelayComand<Scene>(x =>
+            {
+                var sceneIndex = _scenes.IndexOf(x);
+                RemoveSceneInternal(x);
+                UndoRedo.Add(new UndoRedoAction(
+                    () => _scenes.Insert(sceneIndex, x),
+                    () => RemoveSceneInternal(x),
+                    $"Remove {x.Name}"
+                ));
+            }, x => !x.IsActive);
+
+            Undo = new RelayComand<object>(x => UndoRedo.Undo());
+            Redo = new RelayComand<object>(x => UndoRedo.Redo());
         }
 
         public Project(string name, string path)
@@ -74,7 +122,7 @@ namespace PrimalEditor.GameProject
             Name = name;
             Path = path;
 
-            //_scene.Add(new Scene(this, "Default Scene"));
+            //_scenes.Add(new Scene(this, "Default Scene"));
             OnDeserialized(new StreamingContext());
         }
 
