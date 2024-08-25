@@ -80,7 +80,7 @@ namespace PrimalEditor.Utilities
             if (_redoList.Any())
             {
                 var cmd = _redoList.First();
-                _undoList.RemoveAt(0);
+                _redoList.RemoveAt(0);
                 cmd.Redo();
                 // ??? 
                 _undoList.Add(cmd);

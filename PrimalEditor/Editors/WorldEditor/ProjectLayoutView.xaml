@@ -8,6 +8,7 @@
              mc:Ignorable="d" 
              d:DataContext="{d:DesignInstance Type=proj:Project, IsDesignTimeCreatable=True}"
              d:DesignHeight="450" d:DesignWidth="800">
+    
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="32"/>
@@ -15,7 +16,7 @@
         </Grid.RowDefinitions>
         <Button Content="Add Scene" Width="96" VerticalAlignment="Center" Focusable="False"
                 Grid.Row="0" HorizontalAlignment="Left" Margin="20,0,0,0"
-                Command="{Binding AddScene}" />
+                Command="{Binding AddSceneCommand}" />
         <!--Click="OnAddScene_Button_Click"/>-->
         <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
             <ItemsControl ItemsSource="{Binding Scenes}">
@@ -31,14 +32,27 @@
                                 <Grid>
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="{Binding Name}"/>
-                                        <Button Content="Remove" Command="{Binding DataContext.RemoveScene, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        <Button Content="Remove" Command="{Binding DataContext.RemoveSceneCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}" Margin="20, 0" Focusable="False"
                                                 />
+                                        <Button Content="+" IsEnabled="{Binding IsActive}"
+                                                Click="OnAddGameEntity_Button_Click"/>
                                     </StackPanel>
 
                                 </Grid>
                             </Expander.Header>
-                            <Border Background="LightBlue" Height="100"/>
+                            <ListBox ItemsSource="{Binding GameEntitites}" IsEnabled="{Binding IsActive}" SelectionMode="Extended">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Name}"/>
+                                            <Button Content="Remove" Command="{Binding ParentScene.RemoveGameEntityCommand}"
+                                                    CommandParameter="{Binding}" Margin="20, 0"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                            <!--<Border Background="LightBlue" Height="100"/>-->
                         </Expander>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
