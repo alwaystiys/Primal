@@ -25,10 +25,9 @@
             <Border Width="800" Background="LightGreen">
                 <TextBlock FontSize="72" Text="Create Project"/>
             </Border>
-            -->
-            <local:OpenProjectView/>
-            <local:CreateProjectView/>
+            --> 
+            <local:OpenProjectView x:Name="openProjectView" />
+            <local:CreateProjectView x:Name="createProjectView" />
         </StackPanel>
-        
     </Grid>
 </Window>

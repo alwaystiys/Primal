@@ -1,5 +1,6 @@
 ﻿using PrimalEditor.Components;
 using PrimalEditor.GameProject;
+using PrimalEditor.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,14 +37,35 @@ namespace PrimalEditor.Editors
         {
             var btn = sender as Button;
             var vm = btn.DataContext as Scene;
-            vm.AddGameEntityCommand.Execute(new GameEntity(vm) { Name = "Empty Game Entity"});
+            vm.AddGameEntityCommand.Execute(new GameEntity(vm) { Name = "Empty Game Entity" });
         }
 
-        //private void OnAddScene_Button_Click(object sender, RoutedEventArgs e)
-        //{
-        //    var vm = DataContext as Project;
-        //    vm.AddScene("New Scene " + vm.Scenes.Count);
+        private void OnGameEntities_ListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            GameEntityView.Instance.DataContext = null;
+            var listBox = sender as ListBox;
+            if (e.AddedItems.Count > 0)
+            {
+                GameEntityView.Instance.DataContext = listBox.SelectedItems[0];
+            }
+            var newSelection = listBox.SelectedItems.Cast<GameEntity>().ToList();
+            var previousSelection = newSelection.Except(e.AddedItems.Cast<GameEntity>()).Concat(e.RemovedItems.Cast<GameEntity>()).ToList();
 
-        //}
+            Project.UndoRedo.Add(new UndoRedoAction(
+                () =>
+                {
+                    listBox.UnselectAll();
+                    previousSelection.ForEach(x => (listBox.ItemContainerGenerator.ContainerFromItem(x) as ListBoxItem).IsSelected = true);
+                },
+                () =>
+                {
+                    listBox.UnselectAll();
+                    newSelection.ForEach(x => (listBox.ItemContainerGenerator.ContainerFromItem(x) as ListBoxItem).IsSelected = true);
+                },
+                "Selection changed"
+                ));
+        }
+
+
     }
 }

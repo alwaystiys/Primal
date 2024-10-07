@@ -41,7 +41,8 @@
 
                                 </Grid>
                             </Expander.Header>
-                            <ListBox ItemsSource="{Binding GameEntitites}" IsEnabled="{Binding IsActive}" SelectionMode="Extended">
+                            <ListBox ItemsSource="{Binding GameEntitites}" IsEnabled="{Binding IsActive}" SelectionMode="Extended"
+                                     SelectionChanged="OnGameEntities_ListBox_SelectionChanged">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
